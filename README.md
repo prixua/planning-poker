@@ -17,6 +17,26 @@ Sistema de Planning Poker para equipes ágeis com interface visual e comunicaç�
 
 ## Como Executar
 
+### Opção 1: Com Docker (Recomendado) 🐳
+
+**Usando Docker Compose:**
+```bash
+docker-compose up --build
+```
+
+**Ou usando Docker diretamente:**
+```bash
+# Construir imagem
+docker build -t planning-poker .
+
+# Executar container
+docker run -p 3000:3000 -p 3001:3001 planning-poker
+```
+
+**Acesse:** `http://localhost:3000`
+
+### Opção 2: Instalação Local
+
 ### Pré-requisitos
 - Node.js 18+ instalado
 - NPM ou Yarn
@@ -104,12 +124,41 @@ server.js                        # Servidor Socket.io
 - **Comunicação**: WebSockets para tempo real
 - **Estilização**: Tailwind CSS
 
-## Próximas Melhorias
+## Deployment com Docker 🚀
 
-- [ ] Persistência de salas em banco de dados
-- [ ] Histórico de votações
-- [ ] Estatísticas da sessão
-- [ ] Temas personalizáveis
-- [ ] Notificações push
-- [ ] Chat da sala
-- [ ] Exportar resultados
+### Publicar no Docker Hub
+
+```bash
+# Construir e taguear
+docker build -t seu-usuario/planning-poker:latest .
+
+# Publicar
+docker push seu-usuario/planning-poker:latest
+
+# Usar em qualquer lugar
+docker run -d -p 3000:3000 -p 3001:3001 seu-usuario/planning-poker:latest
+```
+
+### Deploy em Servidores
+
+**VPS/Cloud:**
+```bash
+# No servidor
+git clone https://github.com/seu-usuario/planning-poker.git
+cd planning-poker
+docker-compose up -d
+```
+
+**Kubernetes:**
+```bash
+# Aplicar configuração do Kubernetes
+kubectl apply -f k8s-deployment.yaml
+
+# Verificar status
+kubectl get pods
+kubectl get services
+
+# Obter URL externa (se LoadBalancer)
+kubectl get services planning-poker-service
+```
+

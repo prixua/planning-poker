@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  planning-poker:
+    build: .
+    ports:
+      - "0.0.0.0:3000:3000"  # Bind explicitamente em todas interfaces
+      - "0.0.0.0:3001:3001"  # Bind explicitamente em todas interfaces
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    container_name: planning-poker-app
+    networks:
+      - planning-poker-network
+
+networks:
+  planning-poker-network:
+    driver: bridge
+
+# Opcional: adicionar volume para logs
+volumes:
+  logs:

@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planning-poker-dev
+  labels:
+    app: planning-poker
+    env: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: planning-poker
+      env: development
+  template:
+    metadata:
+      labels:
+        app: planning-poker
+        env: development
+    spec:
+      containers:
+      - name: planning-poker
+        image: prixua/planning-poker:latest
+        imagePullPolicy: IfNotPresent  # Busca local primeiro, senão Docker Hub
+        ports:
+        - containerPort: 3000
+          name: frontend
+        - containerPort: 3001
+          name: socket
+        env:
+        - name: NODE_ENV
+          value: "development"
+        - name: HOSTNAME
+          value: "0.0.0.0"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: planning-poker-service-dev
+  labels:
+    app: planning-poker
+    env: development
+spec:
+  selector:
+    app: planning-poker
+    env: development
+  ports:
+  - name: frontend
+    port: 3000
+    targetPort: 3000
+    nodePort: 30000
+    protocol: TCP
+  - name: socket
+    port: 3001
+    targetPort: 3001
+    nodePort: 30001
+    protocol: TCP
+  type: NodePort  # Para desenvolvimento local
