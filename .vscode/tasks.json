@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Planning Poker (Full)",
+			"type": "shell",
+			"command": "npm run dev:full",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Planning Poker (WSL)",
+			"type": "shell",
+			"command": "wsl npm run dev:full",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Install and Start Planning Poker (WSL Bash)",
+			"type": "shell",
+			"command": "wsl -e bash -c \"cd /mnt/c/Users/elieser.prichua/hypera/planning-poker && npm install concurrently @types/uuid && npm run dev:full\"",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
