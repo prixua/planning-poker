@@ -114,6 +114,37 @@ O arquivo `k8s-dev.yaml` inclui:
 - **Resources**: Limites de CPU e memória
 - **Health Checks**: Readiness e liveness probes
 
+## 🎨 Personalização de Cores
+
+### **Sistema de Cores Centralizado**
+Todas as cores da aplicação estão centralizadas em um arquivo único para fácil personalização.
+
+**📁 Arquivo principal:** `src/styles/colors.css`
+
+### **Mudança Rápida de Tema**
+```bash
+# Gerar tema verde
+npm run theme:green
+
+# Gerar tema roxo  
+npm run theme:purple
+
+# Gerar tema laranja
+npm run theme:orange
+
+# Gerar tema vermelho
+npm run theme:red
+```
+
+### **Personalização Manual**
+Edite `src/styles/colors.css` para customizar:
+- **Cores principais**: `--color-primary`, `--color-secondary`
+- **Gradientes**: `--gradient-bg-from`, `--gradient-bg-to`
+- **Cards especiais**: `--color-coffee`, `--color-question`
+- **Status**: `--color-success`, `--color-warning`, `--color-danger`
+
+**📖 Documentação completa:** [`docs/CORES.md`](docs/CORES.md)
+
 ## 📖 Como Usar
 
 ### 1. **Criar uma Sala**

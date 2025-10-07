@@ -10,7 +10,12 @@
     "lint": "eslint",
     "socket": "node server.js",
     "dev:full": "concurrently \"npm run socket\" \"npm run dev\"",
-    "dev:integrated": "node server-integrated.js"
+    "dev:integrated": "node server-integrated.js",
+    "theme": "node scripts/generate-themes.js",
+    "theme:green": "node scripts/generate-themes.js green",
+    "theme:purple": "node scripts/generate-themes.js purple",
+    "theme:orange": "node scripts/generate-themes.js orange",
+    "theme:red": "node scripts/generate-themes.js red"
   },
   "dependencies": {
     "next": "15.5.4",
@@ -27,10 +32,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.14",
     "typescript": "^5"
   }
 }
