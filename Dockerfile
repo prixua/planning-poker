@@ -3,7 +3,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Instalar dependências
+# Instalar dependências (incluindo devDependencies para build)
 COPY package*.json ./
 RUN npm ci
 
@@ -13,11 +13,14 @@ COPY . .
 # Construir aplicação
 RUN npm run build
 
-# Expor portas
-EXPOSE 3000 3001
+# Instalar apenas dependências de produção + TypeScript (necessário para next.config)
+RUN npm ci --only=production && npm install typescript && npm cache clean --force
 
-# Script de inicialização
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Verificar se o arquivo servidor existe
+RUN ls -la server-integrated.js
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Expor apenas a porta do Next.js
+EXPOSE 3000
+
+# Iniciar diretamente o servidor integrado
+CMD ["node", "server-integrated.js"]

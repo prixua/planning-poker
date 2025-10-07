@@ -26,14 +26,22 @@ export default function RoomPage() {
   const [showJoinForm, setShowJoinForm] = useState(!userName);
   const [formUserName, setFormUserName] = useState('');
   const [formUserRole, setFormUserRole] = useState<UserRole>('voter');
+  const [isJoining, setIsJoining] = useState(false);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     // Só conectar se tivermos um nome de usuário
     if (!userName || showJoinForm) return;
 
+    // Conectar ao Socket.io na mesma porta do Next.js
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
+      : 'http://localhost:3000';
+
     // Conectar ao servidor Socket.io
-    socketRef.current = io('http://localhost:3001');
+    socketRef.current = io(socketUrl, {
+      path: '/api/socket'
+    });
 
     socketRef.current.on('connect', () => {
       setConnected(true);
@@ -47,13 +55,15 @@ export default function RoomPage() {
 
     socketRef.current.on('room-updated', (updatedRoom: Room) => {
       setRoom(updatedRoom);
-      // Buscar por socket.id ou por nome como fallback
-      const user = updatedRoom.users.find(u => u.id === socketRef.current?.id) || 
+      // Buscar por socketId primeiro, depois por nome como fallback
+      const user = updatedRoom.users.find(u => u.socketId === socketRef.current?.id) || 
                    updatedRoom.users.find(u => u.name === userName);
       setCurrentUser(user || null);
       
-      // Se o usuário não votou mais (após reset), limpar voto selecionado local
-      if (user && !user.hasVoted) {
+      // Atualizar voto selecionado baseado no estado do servidor
+      if (user && user.vote) {
+        setSelectedVote(user.vote);
+      } else if (user && !user.vote) {
         setSelectedVote(null);
       }
     });
@@ -71,16 +81,28 @@ export default function RoomPage() {
     };
   }, [roomId, userName, userRole, showJoinForm]);
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (!formUserName.trim()) {
       alert('Por favor, insira seu nome');
       return;
     }
 
+    setIsJoining(true);
+    
+    // Pequeno delay para mostrar o loading
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     setShowJoinForm(false);
     
+    // Conectar ao Socket.io na mesma porta do Next.js
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
+      : 'http://localhost:3000';
+    
     // Conectar ao servidor Socket.io
-    socketRef.current = io('http://localhost:3001');
+    socketRef.current = io(socketUrl, {
+      path: '/api/socket'
+    });
 
     socketRef.current.on('connect', () => {
       setConnected(true);
@@ -94,13 +116,15 @@ export default function RoomPage() {
 
     socketRef.current.on('room-updated', (updatedRoom: Room) => {
       setRoom(updatedRoom);
-      // Buscar por socket.id ou por nome como fallback
-      const user = updatedRoom.users.find(u => u.id === socketRef.current?.id) || 
+      // Buscar por socketId primeiro, depois por nome como fallback
+      const user = updatedRoom.users.find(u => u.socketId === socketRef.current?.id) || 
                    updatedRoom.users.find(u => u.name === formUserName);
       setCurrentUser(user || null);
       
-      // Se o usuário não votou mais (após reset), limpar voto selecionado local
-      if (user && !user.hasVoted) {
+      // Atualizar voto selecionado baseado no estado do servidor
+      if (user && user.vote) {
+        setSelectedVote(user.vote);
+      } else if (user && !user.vote) {
         setSelectedVote(null);
       }
     });
@@ -120,16 +144,16 @@ export default function RoomPage() {
     if (currentUser?.role !== 'voter' || room?.votesRevealed) return;
     
     setSelectedVote(vote);
-    socketRef.current?.emit('vote-cast', { userId: currentUser.id, vote });
+    socketRef.current?.emit('vote', { roomId, vote });
   };
 
   const handleRevealVotes = () => {
-    socketRef.current?.emit('reveal-votes');
+    socketRef.current?.emit('reveal-votes', { roomId });
   };
 
   const handleResetVotes = () => {
     setSelectedVote(null);
-    socketRef.current?.emit('reset-votes');
+    socketRef.current?.emit('reset-votes', { roomId });
   };
 
   const copyRoomLink = () => {
@@ -170,9 +194,10 @@ export default function RoomPage() {
                 id="formUserName"
                 value={formUserName}
                 onChange={(e) => setFormUserName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isJoining}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Digite seu nome"
-                onKeyPress={(e) => e.key === 'Enter' && handleJoinRoom()}
+                onKeyPress={(e) => e.key === 'Enter' && !isJoining && handleJoinRoom()}
               />
             </div>
 
@@ -189,9 +214,10 @@ export default function RoomPage() {
                     value="voter"
                     checked={formUserRole === 'voter'}
                     onChange={(e) => setFormUserRole(e.target.value as UserRole)}
-                    className="mr-2"
+                    disabled={isJoining}
+                    className="mr-2 disabled:cursor-not-allowed"
                   />
-                  <span className="text-sm">Votante</span>
+                  <span className={`text-sm ${isJoining ? 'text-gray-400' : ''}`}>Votante</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -200,9 +226,10 @@ export default function RoomPage() {
                     value="spectator"
                     checked={formUserRole === 'spectator'}
                     onChange={(e) => setFormUserRole(e.target.value as UserRole)}
-                    className="mr-2"
+                    disabled={isJoining}
+                    className="mr-2 disabled:cursor-not-allowed"
                   />
-                  <span className="text-sm">Espectador</span>
+                  <span className={`text-sm ${isJoining ? 'text-gray-400' : ''}`}>Espectador</span>
                 </label>
               </div>
             </div>
@@ -210,9 +237,17 @@ export default function RoomPage() {
             {/* Botão entrar */}
             <button
               onClick={handleJoinRoom}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              disabled={isJoining}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              Entrar na Sala
+              {isJoining ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Conectando...
+                </div>
+              ) : (
+                'Entrar na Sala'
+              )}
             </button>
           </div>
         </div>
@@ -233,8 +268,45 @@ export default function RoomPage() {
 
   const voters = room.users.filter(user => user.role === 'voter');
   const spectators = room.users.filter(user => user.role === 'spectator');
-  const allVoted = voters.length > 0 && voters.every(user => user.hasVoted);
-  const someVoted = voters.some(user => user.hasVoted);
+  const allVoted = voters.length > 0 && voters.every(user => user.vote !== null && user.vote !== undefined);
+  const someVoted = voters.some(user => user.vote !== null && user.vote !== undefined);
+
+  // Calcular média dos votos (apenas valores numéricos)
+  const calculateAverage = () => {
+    const numericVotes = voters
+      .map(user => user.vote)
+      .filter(vote => vote !== null && vote !== undefined && vote !== 'coffee' && vote !== 'question')
+      .map(vote => parseFloat(vote as string))
+      .filter(vote => !isNaN(vote));
+    
+    if (numericVotes.length === 0) return null;
+    
+    const sum = numericVotes.reduce((acc, vote) => acc + vote, 0);
+    const average = sum / numericVotes.length;
+    
+    return Math.round(average * 10) / 10; // 1 casa decimal
+  };
+
+  // Calcular estatísticas adicionais
+  const getVotingStats = () => {
+    const numericVotes = voters
+      .map(user => user.vote)
+      .filter(vote => vote !== null && vote !== undefined && vote !== 'coffee' && vote !== 'question')
+      .map(vote => parseFloat(vote as string))
+      .filter(vote => !isNaN(vote));
+    
+    if (numericVotes.length === 0) return null;
+    
+    const sorted = [...numericVotes].sort((a, b) => a - b);
+    const specialVotes = voters.filter(user => user.vote === 'coffee' || user.vote === 'question').length;
+    
+    return {
+      min: Math.min(...numericVotes),
+      max: Math.max(...numericVotes),
+      consensus: new Set(numericVotes).size === 1,
+      specialVotes
+    };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 p-4">
@@ -262,7 +334,7 @@ export default function RoomPage() {
               className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               title={!someVoted ? "Pelo menos um votante deve votar para revelar" : ""}
             >
-              Revelar Votos {allVoted ? "(Todos votaram)" : someVoted ? `(${voters.filter(u => u.hasVoted).length}/${voters.length} votaram)` : ""}
+              Revelar Votos {allVoted ? "(Todos votaram)" : someVoted ? `(${voters.filter(u => u.vote !== null && u.vote !== undefined).length}/${voters.length} votaram)` : ""}
             </button>
             <button
               onClick={handleResetVotes}
@@ -322,14 +394,14 @@ export default function RoomPage() {
             <div className="mt-6 p-4 bg-gray-100 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-700">
-                  {voters.filter(u => u.hasVoted).length} de {voters.length} votaram
+                  {voters.filter(u => u.vote !== null && u.vote !== undefined).length} de {voters.length} votaram
                 </span>
                 <div className="flex space-x-1">
                   {voters.map((user) => (
                     <div
                       key={user.id}
                       className={`w-3 h-3 rounded-full ${
-                        user.hasVoted ? 'bg-green-500' : 'bg-gray-300'
+                        (user.vote !== null && user.vote !== undefined) ? 'bg-green-500' : 'bg-gray-300'
                       }`}
                       title={user.name}
                     />
@@ -385,7 +457,42 @@ export default function RoomPage() {
         {/* Resultados */}
         {room.votesRevealed && (
           <div className="mt-6 bg-white rounded-2xl shadow-2xl p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Resultados</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Resultados</h2>
+            
+            {/* Estatísticas */}
+            {(calculateAverage() !== null || (getVotingStats()?.specialVotes ?? 0) > 0) && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Estatísticas</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                  {calculateAverage() !== null && (
+                    <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg">
+                      <div className="text-xs text-blue-600 mb-1">Média</div>
+                      <div className="text-lg font-bold">{calculateAverage()}</div>
+                    </div>
+                  )}
+                  {getVotingStats() && (
+                    <>
+                      <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg">
+                        <div className="text-xs text-green-600 mb-1">Menor</div>
+                        <div className="text-lg font-bold">{getVotingStats()?.min}</div>
+                      </div>
+                      <div className="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg">
+                        <div className="text-xs text-orange-600 mb-1">Maior</div>
+                        <div className="text-lg font-bold">{getVotingStats()?.max}</div>
+                      </div>
+                      {getVotingStats()?.consensus && (
+                        <div className="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg">
+                          <div className="text-xs text-purple-600 mb-1">Status</div>
+                          <div className="text-sm font-bold">🎯 Consenso</div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Cards dos votos */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
               {voters.map((user) => (
                 <div key={user.id} className="text-center">

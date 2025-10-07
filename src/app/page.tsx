@@ -6,6 +6,7 @@ import { UserRole } from '@/types';
 
 export default function HomePage() {
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [joinRoomId, setJoinRoomId] = useState('');
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<UserRole>('voter');
@@ -15,17 +16,22 @@ export default function HomePage() {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     if (!userName.trim()) {
       alert('Por favor, insira seu nome');
       return;
     }
     
+    setIsLoading(true);
+    
+    // Simular um pequeno delay para mostrar o loading
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     const roomId = generateRoomId();
-    router.push(`/room/${roomId}?name=${encodeURIComponent(userName)}&role=${userRole}`);
+    router.push(`/room/${roomId}?name=${encodeURIComponent(userName)}&role=${userRole}&creator=true`);
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (!userName.trim()) {
       alert('Por favor, insira seu nome');
       return;
@@ -35,6 +41,11 @@ export default function HomePage() {
       alert('Por favor, insira um código de sala válido (4 dígitos)');
       return;
     }
+    
+    setIsLoading(true);
+    
+    // Simular um pequeno delay para mostrar o loading
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     router.push(`/room/${joinRoomId}?name=${encodeURIComponent(userName)}&role=${userRole}`);
   };
@@ -100,9 +111,17 @@ export default function HomePage() {
               <div className="space-y-4">
                 <button
                   onClick={() => setIsCreating(true)}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  disabled={isLoading}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  Criar Nova Sala
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Carregando...
+                    </div>
+                  ) : (
+                    'Criar Nova Sala'
+                  )}
                 </button>
                 
                 <div className="text-center text-gray-500">ou</div>
@@ -112,15 +131,24 @@ export default function HomePage() {
                     type="text"
                     value={joinRoomId}
                     onChange={(e) => setJoinRoomId(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent mb-3"
+                    disabled={isLoading}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent mb-3 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="Código da sala (4 dígitos)"
                     maxLength={4}
                   />
                   <button
                     onClick={handleJoinRoom}
-                    className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                    disabled={isLoading}
+                    className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors font-medium"
                   >
-                    Entrar na Sala
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Entrando...
+                      </div>
+                    ) : (
+                      'Entrar na Sala'
+                    )}
                   </button>
                 </div>
               </div>
@@ -128,13 +156,22 @@ export default function HomePage() {
               <div className="space-y-4">
                 <button
                   onClick={handleCreateRoom}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  disabled={isLoading}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  Confirmar Criação da Sala
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Criando sala...
+                    </div>
+                  ) : (
+                    'Confirmar Criação da Sala'
+                  )}
                 </button>
                 <button
                   onClick={() => setIsCreating(false)}
-                  className="w-full bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                  disabled={isLoading}
+                  className="w-full bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Voltar
                 </button>

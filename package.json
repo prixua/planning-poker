@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start",
+    "start": "node server-integrated.js",
+    "start:next": "next start",
     "lint": "eslint",
     "socket": "node server.js",
-    "dev:full": "concurrently \"npm run socket\" \"npm run dev\""
+    "dev:full": "concurrently \"npm run socket\" \"npm run dev\"",
+    "dev:integrated": "node server-integrated.js"
   },
   "dependencies": {
     "next": "15.5.4",

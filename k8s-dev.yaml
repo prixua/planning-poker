@@ -20,24 +20,37 @@ spec:
       containers:
       - name: planning-poker
         image: prixua/planning-poker:latest
-        imagePullPolicy: IfNotPresent  # Busca local primeiro, senão Docker Hub
+        imagePullPolicy: Always  # Forçar pull para testar
+        workingDir: /app
+        command: ["npm"]
+        args: ["start"]
         ports:
         - containerPort: 3000
           name: frontend
-        - containerPort: 3001
-          name: socket
         env:
         - name: NODE_ENV
-          value: "development"
+          value: "production"  # Usar production para evitar hot-reload
         - name: HOSTNAME
           value: "0.0.0.0"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 30
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
+            memory: "256Mi"  # Aumentar memória
             cpu: "200m"
+          limits:
+            memory: "512Mi"  # Aumentar limite
+            cpu: "500m"
 
 ---
 apiVersion: v1
@@ -56,10 +69,5 @@ spec:
     port: 3000
     targetPort: 3000
     nodePort: 30000
-    protocol: TCP
-  - name: socket
-    port: 3001
-    targetPort: 3001
-    nodePort: 30001
     protocol: TCP
   type: NodePort  # Para desenvolvimento local

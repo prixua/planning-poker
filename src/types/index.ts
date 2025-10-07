@@ -4,10 +4,12 @@ export type VoteValue = '0' | '1' | '2' | '3' | '5' | '8' | '13' | '21' | '34' |
 
 export interface User {
   id: string;
+  socketId?: string;
   name: string;
   role: UserRole;
-  hasVoted: boolean;
+  hasVoted?: boolean;
   vote?: VoteValue;
+  connected?: boolean;
 }
 
 export interface Room {

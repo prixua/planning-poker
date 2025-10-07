@@ -54,10 +54,10 @@ export default function UserAvatar({ user, showVote, isCurrentUser }: UserAvatar
       <div className="flex items-center space-x-2">
         {user.role === 'voter' && (
           <>
-            {user.hasVoted ? (
+            {user.vote ? (
               <div className="flex items-center space-x-1">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                {showVote && user.vote && (
+                {showVote && (
                   <span className="text-sm font-bold text-gray-700">
                     {getVoteDisplay(user.vote)}
                   </span>
