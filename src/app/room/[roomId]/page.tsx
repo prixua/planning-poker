@@ -6,6 +6,7 @@ import { io, Socket } from 'socket.io-client';
 import { Room, User, VoteValue, UserRole } from '@/types';
 import VotingCard from '@/components/VotingCard';
 import UserAvatar from '@/components/UserAvatar';
+import ShareButton from '@/components/ShareButton';
 
 const FIBONACCI_VALUES: VoteValue[] = ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89'];
 const SPECIAL_VALUES: VoteValue[] = ['coffee', 'question'];
@@ -154,12 +155,6 @@ export default function RoomPage() {
   const handleResetVotes = () => {
     setSelectedVote(null);
     socketRef.current?.emit('reset-votes', { roomId });
-  };
-
-  const copyRoomLink = () => {
-    const url = `${window.location.origin}/room/${roomId}`;
-    navigator.clipboard.writeText(url);
-    alert('Link da sala copiado para a área de transferência!');
   };
 
   if (error) {
@@ -318,12 +313,7 @@ export default function RoomPage() {
               <h1 className="text-3xl font-bold text-gray-800">Planning Poker</h1>
               <p className="text-gray-600">Sala: {roomId}</p>
             </div>
-            <button
-              onClick={copyRoomLink}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Compartilhar Sala
-            </button>
+            <ShareButton roomId={roomId} />
           </div>
 
           {/* Controles */}
